@@ -46,11 +46,19 @@ jobs:
         continue-on-error: true
         run: |
           if [ -f icon.png ]; then
-            mkdir -p app/assets
-            cp icon.png app/assets/icon-only.png
-            cp icon.png app/assets/icon-foreground.png
-            cd app
-            npx --yes @capacitor/assets generate --android --iconBackgroundColor '#fde4ee'
+            pip install --break-system-packages pillow > /dev/null || pip install pillow > /dev/null
+            python3 - <<'EOF'
+          from PIL import Image
+          import os
+          im = Image.open('icon.png').convert('RGBA')
+          res = 'app/android/app/src/main/res'
+          for d, n in {'mdpi':48,'hdpi':72,'xhdpi':96,'xxhdpi':144,'xxxhdpi':192}.items():
+              os.makedirs(f'{res}/mipmap-{d}', exist_ok=True)
+              ic = im.resize((n, n), Image.LANCZOS)
+              for name in ('ic_launcher.png', 'ic_launcher_round.png', 'ic_launcher_foreground.png'):
+                  ic.save(f'{res}/mipmap-{d}/{name}')
+          EOF
+            rm -rf app/android/app/src/main/res/mipmap-anydpi-v26
           fi
 
       - name: Compilar APK
