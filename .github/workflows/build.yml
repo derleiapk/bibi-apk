@@ -63,6 +63,8 @@ jobs:
 
       - name: Compilar APK
         run: |
+          mkdir -p ~/.android
+          if [ -f debug.keystore ]; then cp debug.keystore ~/.android/debug.keystore; fi
           cd app/android
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
